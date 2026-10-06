@@ -4,6 +4,7 @@ const productRoutes = require("./routes/productRoutes");
 const inventoryRoutes = require("./routes/inventoryRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const orderItemRoutes = require("./routes/orderItemRoutes");
+const expenseRoutes = require("./routes/expenseRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const customerRoutes = require("./routes/customerRoutes");
 const app = express();
@@ -16,6 +17,7 @@ app.get("/", (req, res) => {
   });
 });
 app.use("/api/payments", paymentRoutes);
+app.use("/api/expenses", expenseRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/order-items", orderItemRoutes);
