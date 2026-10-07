@@ -199,9 +199,101 @@ const confirmOrder = async (req, res) => {
   }
 };
 
+const cancelOrder = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { id } = req.params;
+
+    await client.query("BEGIN");
+
+    const orderResult = await client.query(
+      `SELECT id, business_id, customer_id, status, total_amount, created_at
+       FROM orders
+       WHERE id = $1
+       FOR UPDATE`,
+      [id]
+    );
+
+    if (orderResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const order = orderResult.rows[0];
+
+    if (order.status === "cancelled") {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ message: "Order is already cancelled" });
+    }
+
+    if (order.status === "completed") {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ message: "Completed orders cannot be cancelled" });
+    }
+
+    const itemsResult = await client.query(
+      `SELECT product_id, SUM(quantity) AS quantity
+       FROM order_items
+       WHERE order_id = $1
+       GROUP BY product_id`,
+      [id]
+    );
+
+    if (order.status === "confirmed") {
+      for (const item of itemsResult.rows) {
+        const inventoryResult = await client.query(
+          `SELECT product_id, quantity
+           FROM inventory
+           WHERE product_id = $1
+           FOR UPDATE`,
+          [item.product_id]
+        );
+
+        if (inventoryResult.rows.length === 0) {
+          await client.query("ROLLBACK");
+          return res.status(400).json({
+            message: `Inventory not found for product ${item.product_id}`
+          });
+        }
+
+        await client.query(
+          `UPDATE inventory
+           SET quantity = quantity + $1,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE product_id = $2`,
+          [Number(item.quantity), item.product_id]
+        );
+      }
+    }
+
+    const updatedOrder = await client.query(
+      `UPDATE orders
+       SET status = 'cancelled'
+       WHERE id = $1
+       RETURNING id, business_id, customer_id, status, total_amount, created_at`,
+      [id]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      message: "Order cancelled successfully",
+      order: updatedOrder.rows[0]
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error cancelling order:", error.message);
+    res.status(500).json({ message: "Failed to cancel order" });
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   getOrders,
   getOrderById,
   createOrder,
   confirmOrder,
+  cancelOrder,
 };
