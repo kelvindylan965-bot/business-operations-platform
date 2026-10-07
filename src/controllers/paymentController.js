@@ -1,5 +1,19 @@
 const pool = require("../config/database");
 
+const ALLOWED_PAYMENT_METHODS = [
+  "cash",
+  "mpesa",
+  "card",
+  "bank_transfer",
+];
+
+const ALLOWED_PAYMENT_STATUSES = [
+  "pending",
+  "completed",
+  "failed",
+  "refunded",
+];
+
 const getPayments = async (req, res) => {
   try {
     const result = await pool.query(
@@ -61,6 +75,43 @@ const createPayment = async (req, res) => {
       });
     }
 
+    if (Number(amount) <= 0 || Number.isNaN(Number(amount))) {
+      return res.status(400).json({
+        message: "Payment amount must be greater than 0",
+      });
+    }
+
+    const normalizedPaymentMethod = payment_method.trim().toLowerCase();
+
+    if (!ALLOWED_PAYMENT_METHODS.includes(normalizedPaymentMethod)) {
+      return res.status(400).json({
+        message: "Invalid payment method",
+        allowed: ALLOWED_PAYMENT_METHODS,
+      });
+    }
+
+    const normalizedStatus = (status ?? "completed").trim().toLowerCase();
+
+    if (!ALLOWED_PAYMENT_STATUSES.includes(normalizedStatus)) {
+      return res.status(400).json({
+        message: "Invalid payment status",
+        allowed: ALLOWED_PAYMENT_STATUSES,
+      });
+    }
+
+    const orderResult = await pool.query(
+      `SELECT id
+       FROM orders
+       WHERE id = $1`,
+      [order_id]
+    );
+
+    if (orderResult.rows.length === 0) {
+      return res.status(404).json({
+        message: "Order not found",
+      });
+    }
+
     const result = await pool.query(
       `INSERT INTO payments
        (order_id, amount, payment_method, reference, status)
@@ -69,9 +120,9 @@ const createPayment = async (req, res) => {
       [
         order_id,
         amount,
-        payment_method,
-        reference ?? null,
-        status ?? "completed",
+        normalizedPaymentMethod,
+        reference?.trim() || null,
+        normalizedStatus,
       ]
     );
 
@@ -101,6 +152,30 @@ const updatePayment = async (req, res) => {
       });
     }
 
+    if (Number(amount) <= 0 || Number.isNaN(Number(amount))) {
+      return res.status(400).json({
+        message: "Payment amount must be greater than 0",
+      });
+    }
+
+    const normalizedPaymentMethod = payment_method.trim().toLowerCase();
+
+    if (!ALLOWED_PAYMENT_METHODS.includes(normalizedPaymentMethod)) {
+      return res.status(400).json({
+        message: "Invalid payment method",
+        allowed: ALLOWED_PAYMENT_METHODS,
+      });
+    }
+
+    const normalizedStatus = status.trim().toLowerCase();
+
+    if (!ALLOWED_PAYMENT_STATUSES.includes(normalizedStatus)) {
+      return res.status(400).json({
+        message: "Invalid payment status",
+        allowed: ALLOWED_PAYMENT_STATUSES,
+      });
+    }
+
     const result = await pool.query(
       `UPDATE payments
        SET amount = $1,
@@ -111,9 +186,9 @@ const updatePayment = async (req, res) => {
        RETURNING id, order_id, amount, payment_method, reference, status, paid_at`,
       [
         amount,
-        payment_method,
-        reference ?? null,
-        status,
+        normalizedPaymentMethod,
+        reference?.trim() || null,
+        normalizedStatus,
         id,
       ]
     );
