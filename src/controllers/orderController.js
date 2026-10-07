@@ -290,10 +290,67 @@ const cancelOrder = async (req, res) => {
   }
 };
 
+const completeOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const orderResult = await pool.query(
+      `SELECT id, business_id, customer_id, status, total_amount, created_at
+       FROM orders
+       WHERE id = $1`,
+      [id]
+    );
+
+    if (orderResult.rows.length === 0) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const order = orderResult.rows[0];
+
+    if (order.status === "pending") {
+      return res.status(400).json({
+        message: "Only confirmed orders can be completed"
+      });
+    }
+
+    if (order.status === "cancelled") {
+      return res.status(400).json({
+        message: "Cancelled orders cannot be completed"
+      });
+    }
+
+    if (order.status === "completed") {
+      return res.status(400).json({
+        message: "Order is already completed"
+      });
+    }
+
+    const updatedOrder = await pool.query(
+      `UPDATE orders
+       SET status = 'completed'
+       WHERE id = $1
+       RETURNING id, business_id, customer_id, status, total_amount, created_at`,
+      [id]
+    );
+
+    res.json({
+      message: "Order completed successfully",
+      order: updatedOrder.rows[0]
+    });
+  } catch (error) {
+    console.error("Error completing order:", error.message);
+
+    res.status(500).json({
+      message: "Failed to complete order"
+    });
+  }
+};
+
 module.exports = {
   getOrders,
   getOrderById,
   createOrder,
   confirmOrder,
   cancelOrder,
+  completeOrder,
 };
