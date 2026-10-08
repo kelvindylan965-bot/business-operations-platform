@@ -1,6 +1,7 @@
 const express = require("express");
 
 const authenticateToken = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/roleMiddleware");
 
 const {
   getCustomers,
@@ -17,7 +18,7 @@ router.use(authenticateToken);
 router.get("/", getCustomers);
 router.get("/:id", getCustomerById);
 router.put("/:id", updateCustomer);
-router.delete("/:id", deleteCustomer);
+router.delete("/:id", authorizeRoles("admin"), deleteCustomer);
 router.post("/", createCustomer);
 
 module.exports = router;
