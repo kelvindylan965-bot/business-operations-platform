@@ -66,6 +66,25 @@ const createExpense = async (req, res) => {
       });
     }
 
+    if (!Number.isFinite(Number(amount)) || Number(amount) <= 0) {
+      return res.status(400).json({
+        message: "Expense amount must be greater than 0",
+      });
+    }
+
+    const businessResult = await pool.query(
+      `SELECT id
+       FROM businesses
+       WHERE id = $1`,
+      [business_id]
+    );
+
+    if (businessResult.rows.length === 0) {
+      return res.status(404).json({
+        message: "Business not found",
+      });
+    }
+
     const result = await pool.query(
       `INSERT INTO expenses
        (business_id, description, category, amount, expense_date)
@@ -111,6 +130,11 @@ const updateExpense = async (req, res) => {
       });
     }
 
+    if (!Number.isFinite(Number(amount)) || Number(amount) <= 0) {
+      return res.status(400).json({
+        message: "Expense amount must be greater than 0",
+      });
+    }
     const result = await pool.query(
       `UPDATE expenses
        SET description = $1,

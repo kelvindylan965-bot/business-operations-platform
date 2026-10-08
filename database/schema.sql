@@ -121,3 +121,7 @@ CHECK (unit_price >= 0);
 ALTER TABLE payments
 ADD CONSTRAINT payments_amount_positive
 CHECK (amount > 0);
+
+ALTER TABLE expenses
+ADD CONSTRAINT expenses_amount_positive
+CHECK (amount > 0);
