@@ -8,6 +8,8 @@ const expenseRoutes = require("./routes/expenseRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const customerRoutes = require("./routes/customerRoutes");
 const authRoutes = require("./routes/authRoutes");
+const bootstrapRoutes = require("./routes/bootstrapRoutes");
+const userRoutes = require("./routes/userRoutes");
 const app = express();
 app.use(express.json());
 const PORT = 3000;
@@ -18,6 +20,8 @@ app.get("/", (req, res) => {
   });
 });
 app.use("/api/auth", authRoutes);
+app.use("/api/auth/bootstrap", bootstrapRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/customers", customerRoutes);
