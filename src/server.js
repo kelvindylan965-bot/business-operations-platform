@@ -7,6 +7,7 @@ const orderItemRoutes = require("./routes/orderItemRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const customerRoutes = require("./routes/customerRoutes");
+const authRoutes = require("./routes/authRoutes");
 const app = express();
 app.use(express.json());
 const PORT = 3000;
@@ -16,6 +17,7 @@ app.get("/", (req, res) => {
     message: "Business Operations Platform API is running",
   });
 });
+app.use("/api/auth", authRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/customers", customerRoutes);
