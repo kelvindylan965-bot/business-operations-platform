@@ -57,27 +57,27 @@ This project also gives me a way to demonstrate my development skills through a 
 
 ### Customers and Staff
 
-![Customers](screenshots/customers.png)
+![Customers](Screenshots/customers.png)
 
-![Staff](screenshots/staff.png)
+![Staff](Screenshots/staff.png)
 
 ### Products and Inventory
 
-![Products](screenshots/products.png)
+![Products](Screenshots/products.png)
 
-![Inventory](screenshots/inventory.png)
+![Inventory](Screenshots/inventory.png)
 
 ### Orders and Payments
 
-![Orders](screenshots/orders.png)
+![Orders](Screenshots/orders.png)
 
-![Payments](screenshots/payments.png)
+![Payments](Screenshots/payments.png)
 
 ### Expenses and Reports
 
-![Expenses](screenshots/expenses.png)
+![Expenses](Screenshots/expenses.png)
 
-![Reports](screenshots/reports.png)
+![Reports](Screenshots/reports.png)
 
 ## Running the Project Locally
 
