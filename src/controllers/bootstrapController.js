@@ -2,6 +2,8 @@ const pool = require("../config/database");
 const bcrypt = require("bcryptjs");
 
 const bootstrapAdmin = async (req, res) => {
+  let client;
+
   try {
     const {
       bootstrap_key,
@@ -36,20 +38,25 @@ const bootstrapAdmin = async (req, res) => {
       });
     }
 
-    const businessResult = await pool.query(
+    client = await pool.connect();
+    await client.query("BEGIN");
+
+    const businessResult = await client.query(
       `SELECT id
        FROM businesses
-       WHERE id = $1`,
+       WHERE id = $1
+       FOR UPDATE`,
       [business_id]
     );
 
     if (businessResult.rows.length === 0) {
+      await client.query("ROLLBACK");
       return res.status(404).json({
         message: "Business not found",
       });
     }
 
-    const adminResult = await pool.query(
+    const adminResult = await client.query(
       `SELECT id
        FROM users
        WHERE business_id = $1
@@ -58,12 +65,13 @@ const bootstrapAdmin = async (req, res) => {
     );
 
     if (adminResult.rows.length > 0) {
+      await client.query("ROLLBACK");
       return res.status(409).json({
         message: "An admin already exists for this business",
       });
     }
 
-    const existingUser = await pool.query(
+    const existingUser = await client.query(
       `SELECT id
        FROM users
        WHERE email = $1`,
@@ -71,6 +79,7 @@ const bootstrapAdmin = async (req, res) => {
     );
 
     if (existingUser.rows.length > 0) {
+      await client.query("ROLLBACK");
       return res.status(409).json({
         message: "Email is already registered",
       });
@@ -78,7 +87,7 @@ const bootstrapAdmin = async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    const result = await pool.query(
+    const result = await client.query(
       `INSERT INTO users
        (business_id, full_name, email, password_hash, role)
        VALUES ($1, $2, $3, $4, 'admin')
@@ -91,16 +100,22 @@ const bootstrapAdmin = async (req, res) => {
       ]
     );
 
+    await client.query("COMMIT");
+
     res.status(201).json({
       message: "Admin bootstrapped successfully",
       user: result.rows[0],
     });
   } catch (error) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
+
     console.error("Error bootstrapping admin:", error.message);
 
     res.status(500).json({
       message: "Failed to bootstrap admin",
     });
+  } finally {
+    if (client) client.release();
   }
 };
 

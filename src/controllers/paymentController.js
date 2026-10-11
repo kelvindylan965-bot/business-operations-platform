@@ -17,9 +17,12 @@ const ALLOWED_PAYMENT_STATUSES = [
 const getPayments = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, order_id, amount, payment_method, reference, status, paid_at
-       FROM payments
-       ORDER BY id DESC`
+      `SELECT p.id, p.order_id, p.amount, p.payment_method, p.reference, p.status, p.paid_at
+       FROM payments p
+       JOIN orders o ON o.id = p.order_id
+       WHERE o.business_id = $1
+       ORDER BY p.id DESC`,
+      [req.user.businessId]
     );
 
     res.json(result.rows);
@@ -37,10 +40,11 @@ const getPaymentById = async (req, res) => {
     const { id } = req.params;
 
     const result = await pool.query(
-      `SELECT id, order_id, amount, payment_method, reference, status, paid_at
-       FROM payments
-       WHERE id = $1`,
-      [id]
+      `SELECT p.id, p.order_id, p.amount, p.payment_method, p.reference, p.status, p.paid_at
+       FROM payments p
+       JOIN orders o ON o.id = p.order_id
+       WHERE p.id = $1 AND o.business_id = $2`,
+      [id, req.user.businessId]
     );
 
     if (result.rows.length === 0) {
@@ -90,20 +94,22 @@ const createPayment = async (req, res) => {
       });
     }
 
-    const normalizedStatus = (status ?? "completed").trim().toLowerCase();
-
-    if (!ALLOWED_PAYMENT_STATUSES.includes(normalizedStatus)) {
+    if (
+      status !== undefined &&
+      String(status).trim().toLowerCase() !== "pending"
+    ) {
       return res.status(400).json({
-        message: "Invalid payment status",
-        allowed: ALLOWED_PAYMENT_STATUSES,
+        message: "New payments must start as pending",
       });
     }
+
+    const normalizedStatus = "pending";
 
     const orderResult = await pool.query(
       `SELECT id
        FROM orders
-       WHERE id = $1`,
-      [order_id]
+       WHERE id = $1 AND business_id = $2`,
+      [order_id, req.user.businessId]
     );
 
     if (orderResult.rows.length === 0) {
@@ -176,13 +182,25 @@ const updatePayment = async (req, res) => {
       });
     }
 
+    if (["completed", "refunded"].includes(normalizedStatus)) {
+      return res.status(400).json({
+        message: "This payment status requires a trusted payment workflow",
+      });
+    }
+
     const result = await pool.query(
       `UPDATE payments
        SET amount = $1,
            payment_method = $2,
            reference = $3,
-           status = $4
+           status = $4,
+           paid_at = NULL
        WHERE id = $5
+         AND EXISTS (
+           SELECT 1 FROM orders o
+           WHERE o.id = payments.order_id
+             AND o.business_id = $6
+         )
        RETURNING id, order_id, amount, payment_method, reference, status, paid_at`,
       [
         amount,
@@ -190,6 +208,7 @@ const updatePayment = async (req, res) => {
         reference?.trim() || null,
         normalizedStatus,
         id,
+        req.user.businessId,
       ]
     );
 
@@ -209,20 +228,62 @@ const updatePayment = async (req, res) => {
   }
 };
 
+
+const verifyPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `UPDATE payments p
+       SET status = 'completed',
+           paid_at = CURRENT_TIMESTAMP
+       FROM orders o
+       WHERE p.id = $1
+         AND o.id = p.order_id
+         AND o.business_id = $2
+         AND LOWER(p.status) = 'pending'
+       RETURNING p.id, p.order_id, p.amount, p.payment_method,
+                 p.reference, p.status, p.paid_at`,
+      [id, req.user.businessId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Pending payment not found",
+      });
+    }
+
+    res.json({
+      message: "Payment verified successfully",
+      payment: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Error verifying payment:", error.message);
+    res.status(500).json({
+      message: "Failed to verify payment",
+    });
+  }
+};
+
+
 const deletePayment = async (req, res) => {
   try {
     const { id } = req.params;
 
     const result = await pool.query(
-      `DELETE FROM payments
-       WHERE id = $1
-       RETURNING id, order_id, amount, payment_method, reference, status, paid_at`,
-      [id]
+      `DELETE FROM payments p
+       USING orders o
+       WHERE p.id = $1
+         AND o.id = p.order_id
+         AND o.business_id = $2
+         AND LOWER(p.status) NOT IN ('completed', 'refunded')
+       RETURNING p.id, p.order_id, p.amount, p.payment_method, p.reference, p.status, p.paid_at`,
+      [id, req.user.businessId]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({
-        message: "Payment not found",
+        message: "Payment not found or cannot be deleted",
       });
     }
 
@@ -244,5 +305,7 @@ module.exports = {
   getPaymentById,
   createPayment,
   updatePayment,
+  verifyPayment,
   deletePayment,
+
 };

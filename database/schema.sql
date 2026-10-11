@@ -72,8 +72,8 @@ CREATE TABLE payments (
     amount NUMERIC(12, 2) NOT NULL,
     payment_method VARCHAR(50) NOT NULL,
     reference VARCHAR(100),
-    status VARCHAR(50) NOT NULL DEFAULT 'completed',
-    paid_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    status VARCHAR(50) NOT NULL DEFAULT 'pending',
+    paid_at TIMESTAMP
 );
 
 -- 8. Expenses

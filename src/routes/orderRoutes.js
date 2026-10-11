@@ -1,4 +1,5 @@
 const express = require("express");
+const authenticateToken = require("../middleware/authMiddleware");
 
 const {
   getOrders,
@@ -10,6 +11,8 @@ const {
 } = require("../controllers/orderController");
 
 const router = express.Router();
+
+router.use(authenticateToken);
 
 router.get("/", getOrders);
 router.get("/:id", getOrderById);

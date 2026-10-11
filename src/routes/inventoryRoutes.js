@@ -1,4 +1,5 @@
 const express = require("express");
+const authenticateToken = require("../middleware/authMiddleware");
 
 const {
   getInventory,
@@ -9,6 +10,8 @@ const {
 } = require("../controllers/inventoryController");
 
 const router = express.Router();
+
+router.use(authenticateToken);
 
 router.get("/", getInventory);
 router.get("/low-stock", getLowStock);
