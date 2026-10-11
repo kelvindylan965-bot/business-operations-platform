@@ -104,11 +104,44 @@ From the project root, run:
 npm install
 ```
 
-### 3. Configure the database
+### 3. Configure PostgreSQL and environment variables
 
-Set up PostgreSQL and configure the environment variables required by the backend. Use the project's database schema and configuration as a guide.
+1. Install and start PostgreSQL.
+2. Create a database for the application.
+3. Apply the project's schema to that database from the project root:
 
-Keep database credentials, passwords, JWT secrets, and other private settings out of GitHub.
+   ```bash
+   psql -U YOUR_POSTGRES_USER -d YOUR_DATABASE_NAME -f database/schema.sql
+   ```
+
+   Replace the placeholders with your PostgreSQL username and database name. The database must exist before you run this command.
+
+4. Create a `.env` file in the project root and configure these variables:
+
+   ```dotenv
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=YOUR_DATABASE_NAME
+   DB_USER=YOUR_POSTGRES_USER
+   DB_PASSWORD=YOUR_POSTGRES_PASSWORD
+   JWT_SECRET=REPLACE_WITH_A_LONG_RANDOM_SECRET
+   ENABLE_ADMIN_BOOTSTRAP=false
+   ADMIN_BOOTSTRAP_KEY=
+   ```
+
+   Adjust the database settings for your local PostgreSQL installation. Generate a strong, unique JWT secret. Keep `ENABLE_ADMIN_BOOTSTRAP=false` for normal use. Only enable admin bootstrap deliberately for initial setup, with a strong `ADMIN_BOOTSTRAP_KEY`, then disable it again.
+
+The schema creates tables but does not create a business record or administrator. Before using admin bootstrap, create a business record and note its ID:
+
+```sql
+INSERT INTO businesses (name)
+VALUES ('Your Business Name')
+RETURNING id;
+```
+
+Use the returned ID as `business_id` when creating the administrator. Keep bootstrap disabled during normal use.
+
+**Security:** Never commit `.env` or publish database passwords, JWT secrets, or admin bootstrap keys. Keep your local credentials private.
 
 ### 4. Start the backend
 
