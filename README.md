@@ -2,7 +2,7 @@
 
 A web application for managing the main tasks involved in running a small business.
 
-I built this project to practise what I learned in full-stack web development and apply it to something practical. I wanted to bring the frontend, backend, and database together in one application that can help manage everyday business tasks.
+I built this project to practice what I learned in full-stack web development and apply it to something practical. I wanted to bring the frontend, backend, and database together in one application that can help manage everyday business tasks.
 
 The application brings customer records, products, stock, orders, payments, expenses, and reports into one place.
 
