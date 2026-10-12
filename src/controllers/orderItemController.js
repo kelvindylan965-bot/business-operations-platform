@@ -176,12 +176,13 @@ const updateOrderItem = async (req, res) => {
     const itemResult = await client.query(
       `UPDATE order_items
        SET quantity = $1, subtotal = $2
-       WHERE id = $3
+       WHERE id = $3 AND order_id = $4
        RETURNING id, order_id, product_id, quantity, unit_price, subtotal, created_at`,
       [
         Number(quantity),
         Number(quantity) * Number(existing.unit_price),
         id,
+        existing.order_id,
       ]
     );
 
@@ -241,9 +242,9 @@ const deleteOrderItem = async (req, res) => {
 
     const itemResult = await client.query(
       `DELETE FROM order_items
-       WHERE id = $1
+       WHERE id = $1 AND order_id = $2
        RETURNING id, order_id, product_id, quantity, unit_price, subtotal, created_at`,
-      [id]
+      [id, existing.order_id]
     );
 
     await client.query(
