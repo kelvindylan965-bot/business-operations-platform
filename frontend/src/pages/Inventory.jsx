@@ -25,8 +25,8 @@ function Inventory() {
         const headers = { Authorization: `Bearer ${token}` };
 
         const [inventoryResponse, productsResponse] = await Promise.all([
-          fetch("http://localhost:3000/api/inventory", { headers }),
-          fetch("http://localhost:3000/api/products", { headers }),
+          fetch("/api/inventory", { headers }),
+          fetch("/api/products", { headers }),
         ]);
 
         if (!inventoryResponse.ok || !productsResponse.ok) {
@@ -96,7 +96,7 @@ function Inventory() {
     try {
       setAdding(true);
 
-      const response = await fetch("http://localhost:3000/api/inventory", {
+      const response = await fetch("/api/inventory", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -148,7 +148,7 @@ function Inventory() {
       setNotice("");
 
       const response = await fetch(
-        `http://localhost:3000/api/inventory/product/${item.product_id}`,
+        `/api/inventory/product/${item.product_id}`,
         {
           method: "PUT",
           headers: {

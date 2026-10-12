@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-const API = "http://localhost:3000/api";
+const API = "/api";
 
 export default function Payments() {
   const token = localStorage.getItem("token");

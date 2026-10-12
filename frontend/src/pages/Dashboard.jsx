@@ -45,11 +45,11 @@ function Dashboard() {
 
         const [customersResponse, productsResponse, ordersResponse, paymentsResponse, inventoryResponse] =
           await Promise.all([
-            fetch("http://localhost:3000/api/customers", { headers }),
-            fetch("http://localhost:3000/api/products", { headers }),
-            fetch("http://localhost:3000/api/orders", { headers }),
-            fetch("http://localhost:3000/api/payments", { headers }),
-            fetch("http://localhost:3000/api/inventory", { headers }),
+            fetch("/api/customers", { headers }),
+            fetch("/api/products", { headers }),
+            fetch("/api/orders", { headers }),
+            fetch("/api/payments", { headers }),
+            fetch("/api/inventory", { headers }),
           ]);
 
         const responses = [

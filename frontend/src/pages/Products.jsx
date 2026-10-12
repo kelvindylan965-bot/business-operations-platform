@@ -20,7 +20,7 @@ function Products() {
 
   const loadProducts = useCallback(async function loadProducts() {
     try {
-      const response = await fetch("http://localhost:3000/api/products", {
+      const response = await fetch("/api/products", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -75,8 +75,8 @@ function Products() {
 
       const response = await fetch(
         editingId
-          ? `http://localhost:3000/api/products/${editingId}`
-          : "http://localhost:3000/api/products",
+          ? `/api/products/${editingId}`
+          : "/api/products",
         {
           method: editingId ? "PUT" : "POST",
           headers: {
@@ -127,7 +127,7 @@ function Products() {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/products/${product.id}`,
+        `/api/products/${product.id}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },

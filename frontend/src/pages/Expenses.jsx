@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-const API = "http://localhost:3000/api";
+const API = "/api";
 const blankForm = { description: "", category: "", amount: "", expense_date: new Date().toISOString().slice(0, 10) };
 
 export default function Expenses() {

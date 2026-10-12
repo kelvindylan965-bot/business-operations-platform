@@ -1,7 +1,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-const API = "http://localhost:3000/api";
+const API = "/api";
 
 function Orders() {
   const token = localStorage.getItem("token");

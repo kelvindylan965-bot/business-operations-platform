@@ -24,7 +24,7 @@ function Customers() {
 
     async function fetchCustomers() {
       try {
-        const response = await fetch("http://localhost:3000/api/customers", {
+        const response = await fetch("/api/customers", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -74,7 +74,7 @@ function Customers() {
       setSaving(true);
       const editing = editingId !== null;
       const response = await fetch(
-        `http://localhost:3000/api/customers${editing ? `/${editingId}` : ""}`,
+        `/api/customers${editing ? `/${editingId}` : ""}`,
         {
           method: editing ? "PUT" : "POST",
           headers: {
@@ -109,7 +109,7 @@ function Customers() {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/customers/${customer.id}`,
+        `/api/customers/${customer.id}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },

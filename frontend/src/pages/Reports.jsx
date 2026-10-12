@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-const API = "http://localhost:3000/api";
+const API = "/api";
 const money = (value) => `KSh ${Number(value || 0).toLocaleString()}`;
 
 export default function Reports() {

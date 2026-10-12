@@ -1,5 +1,4 @@
 const express = require("express");
-const cors = require("cors");
 const pool = require("./config/database");
 const productRoutes = require("./routes/productRoutes");
 const inventoryRoutes = require("./routes/inventoryRoutes");
@@ -13,8 +12,8 @@ const bootstrapRoutes = require("./routes/bootstrapRoutes");
 const userRoutes = require("./routes/userRoutes");
 const app = express();
 app.use(express.json());
-app.use(cors());
-const PORT = 3000;
+app.use(express.static(require("path").join(__dirname, "../frontend/dist")));
+const PORT = process.env.PORT || 3000;
 
 app.get("/", (req, res) => {
   res.json({
